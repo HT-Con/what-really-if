@@ -1,0 +1,229 @@
+{
+  "$comment": "Enabled defaults suppress explicit NoEffect changes and scalar Delete deltas at verified read-only metadata paths. Rules apply only to the listed API versions; missing or other versions stay visible. Sources and limitations are documented in README.md and tests/fixtures/safe-default-paths.json.",
+  "version": 1,
+  "suppressNoEffect": true,
+  "maxValueLength": 500,
+  "rules": [
+    {
+      "id": "appgw-provisioning-state",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/applicationGateways",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:properties\\.provisioningState)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "applicationGateways-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/applicationGateways",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.authenticationCertificates\\[\\d+\\]\\.etag|properties\\.authenticationCertificates\\[\\d+\\]\\.properties\\.provisioningState|properties\\.backendAddressPools\\[\\d+\\]\\.etag|properties\\.backendAddressPools\\[\\d+\\]\\.properties\\.provisioningState|properties\\.backendHttpSettingsCollection\\[\\d+\\]\\.etag|properties\\.backendHttpSettingsCollection\\[\\d+\\]\\.properties\\.provisioningState|properties\\.backendSettingsCollection\\[\\d+\\]\\.etag|properties\\.backendSettingsCollection\\[\\d+\\]\\.properties\\.provisioningState|properties\\.frontendIPConfigurations\\[\\d+\\]\\.etag|properties\\.frontendIPConfigurations\\[\\d+\\]\\.properties\\.provisioningState|properties\\.frontendPorts\\[\\d+\\]\\.etag|properties\\.frontendPorts\\[\\d+\\]\\.properties\\.provisioningState|properties\\.gatewayIPConfigurations\\[\\d+\\]\\.etag|properties\\.gatewayIPConfigurations\\[\\d+\\]\\.properties\\.provisioningState|properties\\.httpListeners\\[\\d+\\]\\.etag|properties\\.httpListeners\\[\\d+\\]\\.properties\\.provisioningState|properties\\.listeners\\[\\d+\\]\\.etag|properties\\.listeners\\[\\d+\\]\\.properties\\.provisioningState|properties\\.loadDistributionPolicies\\[\\d+\\]\\.etag|properties\\.loadDistributionPolicies\\[\\d+\\]\\.properties\\.provisioningState|properties\\.privateEndpointConnections\\[\\d+\\]\\.etag|properties\\.privateEndpointConnections\\[\\d+\\]\\.properties\\.provisioningState|properties\\.privateLinkConfigurations\\[\\d+\\]\\.etag|properties\\.privateLinkConfigurations\\[\\d+\\]\\.properties\\.provisioningState|properties\\.probes\\[\\d+\\]\\.etag|properties\\.probes\\[\\d+\\]\\.properties\\.provisioningState|properties\\.redirectConfigurations\\[\\d+\\]\\.etag|properties\\.requestRoutingRules\\[\\d+\\]\\.etag|properties\\.requestRoutingRules\\[\\d+\\]\\.properties\\.provisioningState|properties\\.resourceGuid|properties\\.rewriteRuleSets\\[\\d+\\]\\.etag|properties\\.rewriteRuleSets\\[\\d+\\]\\.properties\\.provisioningState|properties\\.routingRules\\[\\d+\\]\\.etag|properties\\.routingRules\\[\\d+\\]\\.properties\\.provisioningState|properties\\.sslCertificates\\[\\d+\\]\\.etag|properties\\.sslCertificates\\[\\d+\\]\\.properties\\.provisioningState|properties\\.sslProfiles\\[\\d+\\]\\.etag|properties\\.sslProfiles\\[\\d+\\]\\.properties\\.provisioningState|properties\\.trustedClientCertificates\\[\\d+\\]\\.etag|properties\\.trustedClientCertificates\\[\\d+\\]\\.properties\\.provisioningState|properties\\.trustedRootCertificates\\[\\d+\\]\\.etag|properties\\.trustedRootCertificates\\[\\d+\\]\\.properties\\.provisioningState|properties\\.urlPathMaps\\[\\d+\\]\\.etag|properties\\.urlPathMaps\\[\\d+\\]\\.properties\\.pathRules\\[\\d+\\]\\.etag|properties\\.urlPathMaps\\[\\d+\\]\\.properties\\.pathRules\\[\\d+\\]\\.properties\\.provisioningState|properties\\.urlPathMaps\\[\\d+\\]\\.properties\\.provisioningState)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "virtualNetworks-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/virtualNetworks",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.provisioningState|properties\\.resourceGuid|properties\\.subnets\\[\\d+\\]\\.etag|properties\\.subnets\\[\\d+\\]\\.properties\\.provisioningState|properties\\.virtualNetworkPeerings\\[\\d+\\]\\.etag|properties\\.virtualNetworkPeerings\\[\\d+\\]\\.properties\\.provisioningState|properties\\.virtualNetworkPeerings\\[\\d+\\]\\.properties\\.resourceGuid)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "networkSecurityGroups-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/networkSecurityGroups",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.defaultSecurityRules\\[\\d+\\]\\.etag|properties\\.defaultSecurityRules\\[\\d+\\]\\.properties\\.provisioningState|properties\\.networkInterfaces\\[\\d+\\]\\.etag|properties\\.networkInterfaces\\[\\d+\\]\\.properties\\.provisioningState|properties\\.networkInterfaces\\[\\d+\\]\\.properties\\.resourceGuid|properties\\.provisioningState|properties\\.resourceGuid|properties\\.securityRules\\[\\d+\\]\\.etag|properties\\.securityRules\\[\\d+\\]\\.properties\\.provisioningState|properties\\.subnets\\[\\d+\\]\\.etag|properties\\.subnets\\[\\d+\\]\\.properties\\.provisioningState)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "routeTables-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/routeTables",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.provisioningState|properties\\.resourceGuid|properties\\.routes\\[\\d+\\]\\.etag|properties\\.routes\\[\\d+\\]\\.properties\\.provisioningState|properties\\.subnets\\[\\d+\\]\\.etag|properties\\.subnets\\[\\d+\\]\\.properties\\.provisioningState)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "publicIPAddresses-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/publicIPAddresses",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.provisioningState|properties\\.resourceGuid)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "networkInterfaces-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/networkInterfaces",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.ipConfigurations\\[\\d+\\]\\.etag|properties\\.ipConfigurations\\[\\d+\\]\\.properties\\.provisioningState|properties\\.provisioningState|properties\\.resourceGuid|properties\\.tapConfigurations\\[\\d+\\]\\.etag|properties\\.tapConfigurations\\[\\d+\\]\\.properties\\.provisioningState)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "loadBalancers-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/loadBalancers",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.backendAddressPools\\[\\d+\\]\\.etag|properties\\.backendAddressPools\\[\\d+\\]\\.properties\\.provisioningState|properties\\.frontendIPConfigurations\\[\\d+\\]\\.etag|properties\\.frontendIPConfigurations\\[\\d+\\]\\.properties\\.provisioningState|properties\\.inboundNatPools\\[\\d+\\]\\.etag|properties\\.inboundNatPools\\[\\d+\\]\\.properties\\.provisioningState|properties\\.inboundNatRules\\[\\d+\\]\\.etag|properties\\.inboundNatRules\\[\\d+\\]\\.properties\\.provisioningState|properties\\.loadBalancingRules\\[\\d+\\]\\.etag|properties\\.loadBalancingRules\\[\\d+\\]\\.properties\\.provisioningState|properties\\.outboundRules\\[\\d+\\]\\.etag|properties\\.outboundRules\\[\\d+\\]\\.properties\\.provisioningState|properties\\.probes\\[\\d+\\]\\.etag|properties\\.probes\\[\\d+\\]\\.properties\\.provisioningState|properties\\.provisioningState|properties\\.resourceGuid)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "applicationSecurityGroups-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/applicationSecurityGroups",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.provisioningState|properties\\.resourceGuid)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "virtualNetworks-subnets-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.applicationGatewayIPConfigurations\\[\\d+\\]\\.etag|properties\\.applicationGatewayIPConfigurations\\[\\d+\\]\\.properties\\.provisioningState|properties\\.delegations\\[\\d+\\]\\.etag|properties\\.delegations\\[\\d+\\]\\.properties\\.provisioningState|properties\\.ipConfigurations\\[\\d+\\]\\.etag|properties\\.ipConfigurations\\[\\d+\\]\\.properties\\.provisioningState|properties\\.provisioningState|properties\\.resourceNavigationLinks\\[\\d+\\]\\.etag|properties\\.resourceNavigationLinks\\[\\d+\\]\\.properties\\.provisioningState|properties\\.serviceAssociationLinks\\[\\d+\\]\\.etag|properties\\.serviceAssociationLinks\\[\\d+\\]\\.properties\\.provisioningState)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "networkSecurityGroups-securityRules-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.destinationApplicationSecurityGroups\\[\\d+\\]\\.etag|properties\\.destinationApplicationSecurityGroups\\[\\d+\\]\\.properties\\.provisioningState|properties\\.destinationApplicationSecurityGroups\\[\\d+\\]\\.properties\\.resourceGuid|properties\\.provisioningState|properties\\.sourceApplicationSecurityGroups\\[\\d+\\]\\.etag|properties\\.sourceApplicationSecurityGroups\\[\\d+\\]\\.properties\\.provisioningState|properties\\.sourceApplicationSecurityGroups\\[\\d+\\]\\.properties\\.resourceGuid)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "routeTables-routes-readonly-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Network/routeTables/routes",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:etag|properties\\.provisioningState)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "storage-account-service-metadata",
+      "enabled": true,
+      "resourceType": "Microsoft.Storage/storageAccounts",
+      "apiVersions": [
+        "2023-05-01",
+        "2024-01-01",
+        "2025-01-01"
+      ],
+      "pathRegex": "^(?:properties\\.provisioningState|properties\\.creationTime)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    },
+    {
+      "id": "managed-identity-generated-identifiers",
+      "enabled": true,
+      "resourceType": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersions": [
+        "2023-01-31",
+        "2024-11-30"
+      ],
+      "pathRegex": "^(?:properties\\.tenantId|properties\\.principalId|properties\\.clientId)$",
+      "changeTypes": [
+        "Delete"
+      ],
+      "reason": "Read-only service metadata in the cited API schemas; suppress only scalar property deletions. No configuration objects or array elements are suppressed."
+    }
+  ]
+}

@@ -1,0 +1,316 @@
+{
+  "specCommit": "11e80d03105672056f0c2af1f1d67d71606672d7",
+  "rules": [
+    {
+      "ruleId": "appgw-provisioning-state",
+      "resourceType": "Microsoft.Network/applicationGateways",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "properties.provisioningState"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/applicationGateway.json"
+    },
+    {
+      "ruleId": "applicationGateways-readonly-metadata",
+      "resourceType": "Microsoft.Network/applicationGateways",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.authenticationCertificates[].etag",
+        "properties.authenticationCertificates[].properties.provisioningState",
+        "properties.backendAddressPools[].etag",
+        "properties.backendAddressPools[].properties.provisioningState",
+        "properties.backendHttpSettingsCollection[].etag",
+        "properties.backendHttpSettingsCollection[].properties.provisioningState",
+        "properties.backendSettingsCollection[].etag",
+        "properties.backendSettingsCollection[].properties.provisioningState",
+        "properties.frontendIPConfigurations[].etag",
+        "properties.frontendIPConfigurations[].properties.provisioningState",
+        "properties.frontendPorts[].etag",
+        "properties.frontendPorts[].properties.provisioningState",
+        "properties.gatewayIPConfigurations[].etag",
+        "properties.gatewayIPConfigurations[].properties.provisioningState",
+        "properties.httpListeners[].etag",
+        "properties.httpListeners[].properties.provisioningState",
+        "properties.listeners[].etag",
+        "properties.listeners[].properties.provisioningState",
+        "properties.loadDistributionPolicies[].etag",
+        "properties.loadDistributionPolicies[].properties.provisioningState",
+        "properties.privateEndpointConnections[].etag",
+        "properties.privateEndpointConnections[].properties.provisioningState",
+        "properties.privateLinkConfigurations[].etag",
+        "properties.privateLinkConfigurations[].properties.provisioningState",
+        "properties.probes[].etag",
+        "properties.probes[].properties.provisioningState",
+        "properties.redirectConfigurations[].etag",
+        "properties.requestRoutingRules[].etag",
+        "properties.requestRoutingRules[].properties.provisioningState",
+        "properties.resourceGuid",
+        "properties.rewriteRuleSets[].etag",
+        "properties.rewriteRuleSets[].properties.provisioningState",
+        "properties.routingRules[].etag",
+        "properties.routingRules[].properties.provisioningState",
+        "properties.sslCertificates[].etag",
+        "properties.sslCertificates[].properties.provisioningState",
+        "properties.sslProfiles[].etag",
+        "properties.sslProfiles[].properties.provisioningState",
+        "properties.trustedClientCertificates[].etag",
+        "properties.trustedClientCertificates[].properties.provisioningState",
+        "properties.trustedRootCertificates[].etag",
+        "properties.trustedRootCertificates[].properties.provisioningState",
+        "properties.urlPathMaps[].etag",
+        "properties.urlPathMaps[].properties.pathRules[].etag",
+        "properties.urlPathMaps[].properties.pathRules[].properties.provisioningState",
+        "properties.urlPathMaps[].properties.provisioningState"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/applicationGateway.json"
+    },
+    {
+      "ruleId": "virtualNetworks-readonly-metadata",
+      "resourceType": "Microsoft.Network/virtualNetworks",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.provisioningState",
+        "properties.resourceGuid",
+        "properties.subnets[].etag",
+        "properties.subnets[].properties.provisioningState",
+        "properties.virtualNetworkPeerings[].etag",
+        "properties.virtualNetworkPeerings[].properties.provisioningState",
+        "properties.virtualNetworkPeerings[].properties.resourceGuid"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/virtualNetwork.json"
+    },
+    {
+      "ruleId": "networkSecurityGroups-readonly-metadata",
+      "resourceType": "Microsoft.Network/networkSecurityGroups",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.defaultSecurityRules[].etag",
+        "properties.defaultSecurityRules[].properties.provisioningState",
+        "properties.networkInterfaces[].etag",
+        "properties.networkInterfaces[].properties.provisioningState",
+        "properties.networkInterfaces[].properties.resourceGuid",
+        "properties.provisioningState",
+        "properties.resourceGuid",
+        "properties.securityRules[].etag",
+        "properties.securityRules[].properties.provisioningState",
+        "properties.subnets[].etag",
+        "properties.subnets[].properties.provisioningState"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/networkSecurityGroup.json"
+    },
+    {
+      "ruleId": "routeTables-readonly-metadata",
+      "resourceType": "Microsoft.Network/routeTables",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.provisioningState",
+        "properties.resourceGuid",
+        "properties.routes[].etag",
+        "properties.routes[].properties.provisioningState",
+        "properties.subnets[].etag",
+        "properties.subnets[].properties.provisioningState"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/routeTable.json"
+    },
+    {
+      "ruleId": "publicIPAddresses-readonly-metadata",
+      "resourceType": "Microsoft.Network/publicIPAddresses",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.provisioningState",
+        "properties.resourceGuid"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/publicIpAddress.json"
+    },
+    {
+      "ruleId": "networkInterfaces-readonly-metadata",
+      "resourceType": "Microsoft.Network/networkInterfaces",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.ipConfigurations[].etag",
+        "properties.ipConfigurations[].properties.provisioningState",
+        "properties.provisioningState",
+        "properties.resourceGuid",
+        "properties.tapConfigurations[].etag",
+        "properties.tapConfigurations[].properties.provisioningState"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/networkInterface.json"
+    },
+    {
+      "ruleId": "loadBalancers-readonly-metadata",
+      "resourceType": "Microsoft.Network/loadBalancers",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.backendAddressPools[].etag",
+        "properties.backendAddressPools[].properties.provisioningState",
+        "properties.frontendIPConfigurations[].etag",
+        "properties.frontendIPConfigurations[].properties.provisioningState",
+        "properties.inboundNatPools[].etag",
+        "properties.inboundNatPools[].properties.provisioningState",
+        "properties.inboundNatRules[].etag",
+        "properties.inboundNatRules[].properties.provisioningState",
+        "properties.loadBalancingRules[].etag",
+        "properties.loadBalancingRules[].properties.provisioningState",
+        "properties.outboundRules[].etag",
+        "properties.outboundRules[].properties.provisioningState",
+        "properties.probes[].etag",
+        "properties.probes[].properties.provisioningState",
+        "properties.provisioningState",
+        "properties.resourceGuid"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/loadBalancer.json"
+    },
+    {
+      "ruleId": "applicationSecurityGroups-readonly-metadata",
+      "resourceType": "Microsoft.Network/applicationSecurityGroups",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.provisioningState",
+        "properties.resourceGuid"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/applicationSecurityGroup.json"
+    },
+    {
+      "ruleId": "virtualNetworks-subnets-readonly-metadata",
+      "resourceType": "Microsoft.Network/virtualNetworks/subnets",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.applicationGatewayIPConfigurations[].etag",
+        "properties.applicationGatewayIPConfigurations[].properties.provisioningState",
+        "properties.delegations[].etag",
+        "properties.delegations[].properties.provisioningState",
+        "properties.ipConfigurations[].etag",
+        "properties.ipConfigurations[].properties.provisioningState",
+        "properties.provisioningState",
+        "properties.resourceNavigationLinks[].etag",
+        "properties.resourceNavigationLinks[].properties.provisioningState",
+        "properties.serviceAssociationLinks[].etag",
+        "properties.serviceAssociationLinks[].properties.provisioningState"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/virtualNetwork.json"
+    },
+    {
+      "ruleId": "networkSecurityGroups-securityRules-readonly-metadata",
+      "resourceType": "Microsoft.Network/networkSecurityGroups/securityRules",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.destinationApplicationSecurityGroups[].etag",
+        "properties.destinationApplicationSecurityGroups[].properties.provisioningState",
+        "properties.destinationApplicationSecurityGroups[].properties.resourceGuid",
+        "properties.provisioningState",
+        "properties.sourceApplicationSecurityGroups[].etag",
+        "properties.sourceApplicationSecurityGroups[].properties.provisioningState",
+        "properties.sourceApplicationSecurityGroups[].properties.resourceGuid"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/networkSecurityGroup.json"
+    },
+    {
+      "ruleId": "routeTables-routes-readonly-metadata",
+      "resourceType": "Microsoft.Network/routeTables/routes",
+      "apiVersions": [
+        "2023-11-01",
+        "2024-05-01",
+        "2024-10-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "etag",
+        "properties.provisioningState"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/network/resource-manager/Microsoft.Network/Network/stable/{apiVersion}/routeTable.json"
+    },
+    {
+      "ruleId": "storage-account-service-metadata",
+      "resourceType": "Microsoft.Storage/storageAccounts",
+      "apiVersions": [
+        "2023-05-01",
+        "2024-01-01",
+        "2025-01-01"
+      ],
+      "paths": [
+        "properties.provisioningState",
+        "properties.creationTime"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/storage/resource-manager/Microsoft.Storage/Storage/stable/{apiVersion}/storage.json"
+    },
+    {
+      "ruleId": "managed-identity-generated-identifiers",
+      "resourceType": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersions": [
+        "2023-01-31",
+        "2024-11-30"
+      ],
+      "paths": [
+        "properties.tenantId",
+        "properties.principalId",
+        "properties.clientId"
+      ],
+      "source": "https://github.com/Azure/azure-rest-api-specs/blob/11e80d03105672056f0c2af1f1d67d71606672d7/specification/msi/resource-manager/Microsoft.ManagedIdentity/ManagedIdentity/stable/{apiVersion}/ManagedIdentity.json"
+    }
+  ]
+}
