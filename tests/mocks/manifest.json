@@ -1,0 +1,121 @@
+{
+  "$comment": "Synthetic, documented What-If examples. Scenario metadata belongs here, not in the Azure response JSON. See README.md for sources and validation limits.",
+  "cases": [
+    {
+      "id": "planned-changes",
+      "title": "what-really-if \u2014 Changes to review",
+      "format": "CLI",
+      "mode": "Incremental",
+      "resultFormat": "FullResourcePayloads",
+      "exitCode": 0,
+      "summary": {
+        "reviewResources": 2,
+        "reviewProperties": 2,
+        "unknownResources": 0,
+        "suppressedProperties": 0
+      },
+      "preview": true,
+      "caption": "Create an identity and review a storage configuration change."
+    },
+    {
+      "id": "metadata-noise",
+      "title": "what-really-if \u2014 Metadata noise",
+      "format": "REST",
+      "mode": "Incremental",
+      "resultFormat": "FullResourcePayloads",
+      "exitCode": 0,
+      "summary": {
+        "reviewResources": 0,
+        "noiseOnlyResources": 1,
+        "suppressedProperties": 3,
+        "unknownResources": 0
+      },
+      "preview": true,
+      "caption": "Three metadata differences, with every suppression explained."
+    },
+    {
+      "id": "unknown-effects",
+      "title": "what-really-if \u2014 Unknown effects",
+      "format": "CLI",
+      "mode": "Incremental",
+      "resultFormat": "FullResourcePayloads",
+      "exitCode": 3,
+      "summary": {
+        "reviewResources": 0,
+        "unknownResources": 1,
+        "unknownProperties": 1,
+        "suppressedProperties": 0
+      },
+      "preview": true,
+      "caption": "An unresolved expression remains visible and returns exit 3."
+    },
+    {
+      "id": "complete-mode-delete",
+      "title": "Complete-mode deletion",
+      "format": "REST",
+      "mode": "Complete",
+      "resultFormat": "FullResourcePayloads",
+      "exitCode": 0,
+      "summary": {
+        "reviewResources": 1,
+        "unknownResources": 0
+      },
+      "preview": false
+    },
+    {
+      "id": "resource-id-only",
+      "title": "Resource IDs without payloads",
+      "format": "CLI",
+      "mode": "Incremental",
+      "resultFormat": "ResourceIdOnly",
+      "exitCode": 3,
+      "summary": {
+        "unknownResources": 1,
+        "reviewResources": 0
+      },
+      "preview": false
+    },
+    {
+      "id": "nested-array",
+      "title": "Nested address-prefix change",
+      "format": "CLI",
+      "mode": "Incremental",
+      "resultFormat": "FullResourcePayloads",
+      "exitCode": 0,
+      "summary": {
+        "reviewResources": 1,
+        "reviewProperties": 1,
+        "unknownResources": 0
+      },
+      "preview": false
+    },
+    {
+      "id": "unsupported",
+      "title": "Unsupported expression resource",
+      "format": "CLI",
+      "mode": "Incremental",
+      "resultFormat": "FullResourcePayloads",
+      "exitCode": 3,
+      "summary": {
+        "unknownResources": 1,
+        "acknowledgedResources": 0
+      },
+      "preview": false
+    },
+    {
+      "id": "acknowledged",
+      "input": "unsupported.json",
+      "config": "acknowledged.config.json",
+      "title": "Reviewed unsupported expression resource",
+      "format": "CLI",
+      "mode": "Incremental",
+      "resultFormat": "FullResourcePayloads",
+      "exitCode": 0,
+      "summary": {
+        "unknownResources": 0,
+        "acknowledgedResources": 1
+      },
+      "preview": false
+    }
+  ]
+}

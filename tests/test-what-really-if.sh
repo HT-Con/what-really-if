@@ -171,9 +171,10 @@ jq '.changes[].delta[] |= (.propertyChangeType = "Modify" | .after = "different"
   "$tmp/defaults.json" > "$tmp/input.json"
 run 'metadata modifications remain visible' 0 ".suppressedProperties == 0 and .reviewProperties == $expected_paths"
 jq '.changes[].after.apiVersion = "2099-01-01"' "$tmp/defaults.json" > "$tmp/input.json"
-run 'unresearched versions remain visible' 0 ".suppressedProperties == 0 and .reviewProperties == $expected_paths"
+common_paths=$(jq '[.changes[].delta[] | select(.path | test("(^|\\.)(etag|provisioningState|resourceGuid)$"))] | length' "$tmp/defaults.json")
+run 'common metadata matches unlisted versions' 0 ".suppressedProperties == $common_paths and .reviewProperties == ($expected_paths - $common_paths)"
 jq '.changes[] |= (del(.before.apiVersion, .after.apiVersion))' "$tmp/defaults.json" > "$tmp/input.json"
-run 'missing versions remain visible' 0 ".suppressedProperties == 0 and .reviewProperties == $expected_paths"
+run 'common metadata matches missing versions' 0 ".suppressedProperties == $common_paths and .reviewProperties == ($expected_paths - $common_paths)"
 jq '.changes[].delta[].before = {provisioningState:"Succeeded"}' "$tmp/defaults.json" > "$tmp/input.json"
 run 'objects cannot match default metadata rules' 0 ".suppressedProperties == 0 and .reviewProperties == $expected_paths"
 jq '.changes[].delta[].before = ["generated"]' "$tmp/defaults.json" > "$tmp/input.json"
@@ -199,18 +200,175 @@ run 'writable storage access tier remains visible' 0 '.suppressedProperties == 0
 fixture '.changes[0].resourceId |= sub("Microsoft.Network/applicationGateways"; "Microsoft.Storage/storageAccounts") | .changes[0].after.apiVersion = "2024-01-01" | .changes[0].delta[0] = {path:"properties.networkAcls.defaultAction",propertyChangeType:"Delete",before:"Deny"}'
 run 'writable storage network rules remain visible' 0 '.suppressedProperties == 0 and .reviewProperties == 1'
 
+# Opt-in structural suppression still checks values and unresolved expressions.
+jq '.rules = [{id:"children",enabled:true,resourceType:"Microsoft.Network/applicationGateways",pathRegex:"^properties.listeners$",changeTypes:["Delete"],reason:"Parent view of separately deployed children",allowStructural:true}]' "$tmp/empty-config.json" > "$tmp/config.json"
+fixture '.changes[0].delta = [{path:"properties.listeners",propertyChangeType:"Delete",before:[{name:"child"}]}]'
+run 'structural opt-in suppresses arrays' 0 '.suppressedProperties == 1'
+[[ $(cat "$tmp/report.md") == *'Parent view of separately deployed children'* ]]
+jq '.rules[0].allowStructural = false' "$tmp/config.json" > "$tmp/next.json"
+mv "$tmp/next.json" "$tmp/config.json"
+run 'structural opt-out preserves arrays' 0 '.suppressedProperties == 0 and .reviewProperties == 1'
+jq '.rules[0].allowStructural = true | .rules[0].beforeEquals = {name:"child"}' "$tmp/config.json" > "$tmp/next.json"
+mv "$tmp/next.json" "$tmp/config.json"
+run 'structural value mismatch stays visible' 0 '.reviewProperties == 1'
+fixture '.changes[0].delta = [{path:"properties.listeners",propertyChangeType:"Delete",before:{name:"child"}}]'
+run 'structural objects can match exact value' 0 '.suppressedProperties == 1'
+fixture '.changes[0].delta = [{path:"properties.listeners",propertyChangeType:"Delete",before:{id:"[reference(\u0027child\u0027)]"}}]'
+run 'structural rules cannot suppress expressions' 3 '.unknownProperties == 1 and .suppressedProperties == 0'
+jq '.rules[0].allowStructural = "yes"' "$tmp/config.json" > "$tmp/next.json"
+mv "$tmp/next.json" "$tmp/config.json"
+run 'invalid structural flag rejected' 2 ''
+
+# beforeIn compares complete JSON values, preserving false/null and types.
+jq '.rules = [{id:"defaults",enabled:true,resourceType:"Microsoft.Network/applicationGateways",pathRegex:"^properties.flag$",changeTypes:["Delete"],reason:"Known service default",beforeIn:[false,null,"Regional",0]}]' "$tmp/empty-config.json" > "$tmp/config.json"
+for value in false null '"Regional"' 0; do
+  jq --argjson value "$value" '.changes[0].delta = [{path:"properties.flag",propertyChangeType:"Delete",before:$value}]' "$tmp/base.json" > "$tmp/input.json"
+  run "beforeIn matches $value" 0 '.suppressedProperties == 1'
+done
+fixture '.changes[0].delta = [{path:"properties.flag",propertyChangeType:"Delete",before:"false"}]'
+run 'beforeIn type mismatch stays visible' 0 '.reviewProperties == 1'
+for value in '[]' 'false' 'null'; do
+  jq --argjson value "$value" '.rules[0].beforeIn = $value' "$tmp/config.json" > "$tmp/next.json"
+  cp "$tmp/config.json" "$tmp/saved.json"
+  mv "$tmp/next.json" "$tmp/config.json"
+  run "invalid beforeIn $value" 2 ''
+  mv "$tmp/saved.json" "$tmp/config.json"
+done
+jq '.rules[0].beforeEquals = false' "$tmp/config.json" > "$tmp/next.json"
+mv "$tmp/next.json" "$tmp/config.json"
+run 'ambiguous before constraints rejected' 2 ''
+
+jq '.rules = [{id:"object-default",enabled:true,resourceType:"Microsoft.Network/applicationGateways",pathRegex:"^properties.flag$",changeTypes:["Delete"],reason:"Exact default object",allowStructural:true,beforeIn:[{enabled:false},["default"]]}]' "$tmp/empty-config.json" > "$tmp/config.json"
+fixture '.changes[0].delta = [{path:"properties.flag",propertyChangeType:"Delete",before:{enabled:false}}]'
+run 'beforeIn matches whole object with structural opt-in' 0 '.suppressedProperties == 1'
+fixture '.changes[0].delta = [{path:"properties.flag",propertyChangeType:"Delete",before:["default","extra"]}]'
+run 'beforeIn rejects partial array match' 0 '.reviewProperties == 1'
+
+# Parse only literal outer resourceId arguments, never nested reference IDs.
+cp "$tmp/empty-config.json" "$tmp/config.json"
+for expression in \
+  "[resourceId('Microsoft.Authorization/roleAssignments', guid(reference('/providers/Microsoft.Compute/virtualMachines/vm').id))]" \
+  "[resourceId('rg', 'Microsoft.Authorization/roleAssignments', 'name')]" \
+  "[resourceId('sub', 'rg', 'Microsoft.Authorization/roleAssignments', 'name')]" \
+  "[resourceId(subscription().subscriptionId, resourceGroup().name, 'Microsoft.Authorization/roleAssignments', guid('a,b', 'it''s'))]"; do
+  jq --arg id "$expression" '.changes = [{resourceId:$id,changeType:"Unsupported",unsupportedReason:"Cannot evaluate reference"}]' "$tmp/base.json" > "$tmp/input.json"
+  run 'outer expression type' 3 '.unknownResources == 1'
+  [[ $(cat "$tmp/report.md") == *$'\nroleAssignments'* ]]
+done
+for expression in \
+  "[resourceId(variables('type'), reference(resourceId('Microsoft.Compute/virtualMachines', 'vm')).id)]" \
+  "[concat(resourceId('Microsoft.Compute/virtualMachines', 'vm'), '/providers/other')]" \
+  "[resourceId('Microsoft.Authorization/roleAssignments', broken(]) ]"; do
+  jq --arg id "$expression" '.changes = [{resourceId:$id,changeType:"Unsupported"}]' "$tmp/base.json" > "$tmp/input.json"
+  run 'uncertain expression type stays unknown' 3 '.unknownResources == 1'
+  [[ $(cat "$tmp/report.md") == *$'\nUnknown'* ]]
+done
+
+# Acknowledgements only cover the specified known failure. New gaps still fail.
+jq '.acknowledgeUnsupported = [{id:"known",enabled:true,resourceIdRegex:"^/known$",unsupportedReasonRegex:"^Known limitation$",reason:"Reviewed upstream limitation"}]' "$tmp/empty-config.json" > "$tmp/config.json"
+fixture '.changes = [{resourceId:"/known",changeType:"Unsupported",unsupportedReason:"Known limitation"}]'
+run 'known unsupported acknowledged' 0 '.acknowledgedResources == 1 and .unknownResources == 0 and (.hasUnknown | not)'
+[[ $(cat "$tmp/report.md") == *'Known limitation'* ]]
+[[ $(cat "$tmp/report.md") == *'Reviewed upstream limitation'* ]]
+[[ $(cat "$tmp/report.md") != *'Everything reported by what-if was classified as noise'* ]]
+fixture '.changes = [{resourceId:"/known",changeType:"Unsupported",unsupportedReason:"Known limitation"}] | .diagnostics = [{level:"Warning",message:"Independent analysis gap"}]'
+run 'acknowledgement preserves independent diagnostics' 3 '.acknowledgedResources == 1 and .hasUnknown'
+fixture '.changes = [{resourceId:"/known",changeType:"Unsupported",unsupportedReason:"Known limitation"},{resourceId:"/new",changeType:"Unsupported",unsupportedReason:"New gap"}]'
+run 'new unsupported alongside acknowledged still fails' 3 '.acknowledgedResources == 1 and .unknownResources == 1'
+fixture '.changes = [{resourceId:"/known",changeType:"Unsupported",unsupportedReason:"New failure"}]'
+run 'new unsupported reason requires review' 3 '.acknowledgedResources == 0 and .unknownResources == 1'
+fixture '.changes = [{resourceId:"/new",changeType:"Unsupported",unsupportedReason:"Known limitation"}]'
+run 'new unsupported resource requires review' 3 '.unknownResources == 1'
+fixture '.changes = [{resourceId:"/known",changeType:"Unsupported",unsupportedReason:"Known limitation",delta:[{path:"property",propertyChangeType:"Modify",before:"a"}]}]'
+run 'acknowledgement cannot hide incomplete property details' 3 '.unknownProperties == 1 and .acknowledgedResources == 0'
+jq '.acknowledgeUnsupported[0].enabled = false' "$tmp/config.json" > "$tmp/next.json"
+mv "$tmp/next.json" "$tmp/config.json"
+fixture '.changes = [{resourceId:"/known",changeType:"Unsupported",unsupportedReason:"Known limitation"}]'
+run 'disabled acknowledgement does not match' 3 '.unknownResources == 1'
+for mutation in 'del(.acknowledgeUnsupported[0].reason)' '.acknowledgeUnsupported[0].unsupportedReasonRegex = "["' '.acknowledgeUnsupported[0].unsupportedReasonRegex = ""' '.acknowledgeUnsupported += .acknowledgeUnsupported' '.acknowledgeUnsupported = false'; do
+  jq "$mutation" "$tmp/config.json" > "$tmp/next.json"
+  cp "$tmp/config.json" "$tmp/saved.json"
+  mv "$tmp/next.json" "$tmp/config.json"
+  run "invalid acknowledgement: $mutation" 2 ''
+  mv "$tmp/saved.json" "$tmp/config.json"
+done
+
+# Extend defaults without copying them. Project ids replace inherited ids.
+printf '%s\n' '{"extends":"default"}' > "$tmp/config.json"
+fixture '.'
+run 'minimal project inherits defaults' 0 '.suppressedProperties == 1'
+printf '%s\n' '{"extends":"default","rules":[]}' > "$tmp/config.json"
+run 'empty project list retains inherited rules' 0 '.suppressedProperties == 1'
+jq '{extends:"default",rules:[.rules[0] | .enabled = false]}' "$repo/what-really-if.json" > "$tmp/config.json"
+run 'project can disable inherited rule by id' 0 '.reviewProperties == 1 and .suppressedProperties == 0'
+jq '{extends:"default",rules:[.rules[0] | .id = "project-first" | .reason = "Project takes precedence"]}' "$repo/what-really-if.json" > "$tmp/config.json"
+run 'project rules precede defaults' 0 '.suppressedProperties == 1'
+[[ $(cat "$tmp/report.md") == *'Project takes precedence'* ]]
+for config_json in '{"extends":"other"}' '{"extends":"default","rules":null}' '{"extends":"default","unexpected":true}'; do
+  printf '%s\n' "$config_json" > "$tmp/config.json"
+  run "invalid inheritance: $config_json" 2 ''
+done
+jq '{extends:"default",rules:[.rules[0],.rules[0]]}' "$repo/what-really-if.json" > "$tmp/config.json"
+run 'duplicate project ids rejected before merge' 2 ''
+
+# Report details preserve identity and the cause of uncertainty.
+cp "$tmp/empty-config.json" "$tmp/config.json"
+fixture '.changes[0].delta = [{path:"properties.flag",propertyChangeType:"Modify",before:false}]'
+run 'unknown property explanation rendered' 3 '.unknownProperties == 1'
+[[ $(cat "$tmp/report.md") == *'Missing expected before/after value'* ]]
+[[ $(cat "$tmp/report.md") == *'/subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/applicationGateways/gw'* ]]
+fixture '.changes[0].changeType = "Create" | .changes[0].after = {name:"gw",type:"Microsoft.Network/applicationGateways",location:"westeurope",properties:{flag:false}} | del(.changes[0].delta)'
+run 'create payload is property rows' 0 '.reviewResources == 1'
+[[ $(cat "$tmp/report.md") == *'| properties.flag | false |'* ]]
+[[ $(cat "$tmp/report.md") != *'Full raw output is in the pipeline artifact'* ]]
+
+# Different spellings of future output paths must not publish over each other.
+fixture '.'
+alias_status=0
+render --input "$tmp/input.json" --output "$tmp/new/report.md" \
+  --summary-file "$tmp/new/./report.md" 2> "$tmp/stderr" || alias_status=$?
+[[ "$alias_status" == 2 ]]
+count=$((count + 1))
+if [[ "${OSTYPE:-}" != msys* && "${OSTYPE:-}" != cygwin* ]]; then
+  ln -s "$tmp/input.json" "$tmp/input-link.json"
+  alias_status=0
+  render --input "$tmp/input.json" --output "$tmp/input-link.json" 2> "$tmp/stderr" || alias_status=$?
+  [[ "$alias_status" == 2 ]]
+  count=$((count + 1))
+fi
+
 # Platform entry points must preserve argument boundaries and UTF-8 text.
 fixture '.changes[0].delta[0] = {path:"tags.Owner",propertyChangeType:"Delete",before:"Müller"}'
-mkdir -p "$tmp/path with spaces ü"
-cp "$tmp/input.json" "$tmp/path with spaces ü/input [preview].json"
-cp "$tmp/config.json" "$tmp/path with spaces ü/project config.json"
-render --input "$tmp/path with spaces ü/input [preview].json" \
-  --output "$tmp/path with spaces ü/report [preview].md" \
-  --config "$tmp/path with spaces ü/project config.json" \
-  --summary-file "$tmp/path with spaces ü/summary [preview].json" \
+# Native Windows jq under Git Bash may misdecode Unicode command-line paths.
+# Keep spaces/brackets there and still verify Unicode report text everywhere.
+path_label='path with spaces ü'
+case "${OSTYPE:-}" in msys*|cygwin*) path_label='path with spaces' ;; esac
+mkdir -p "$tmp/$path_label"
+cp "$tmp/input.json" "$tmp/$path_label/input [preview].json"
+cp "$tmp/config.json" "$tmp/$path_label/project config.json"
+render --input "$tmp/$path_label/input [preview].json" \
+  --output "$tmp/$path_label/report [preview].md" \
+  --config "$tmp/$path_label/project config.json" \
+  --summary-file "$tmp/$path_label/summary [preview].json" \
   --title 'Déploiement "quoted" $literal <script>'
-jq -e '.reviewProperties == 1 and .hasUnknown == false' "$tmp/path with spaces ü/summary [preview].json" >/dev/null
-[[ $(cat "$tmp/path with spaces ü/report [preview].md") == *'Déploiement "quoted" $literal &lt;script&gt;'* ]]
-[[ $(cat "$tmp/path with spaces ü/report [preview].md") == *'Müller'* ]]
+jq -e '.reviewProperties == 1 and .hasUnknown == false' "$tmp/$path_label/summary [preview].json" >/dev/null
+[[ $(cat "$tmp/$path_label/report [preview].md") == *'Déploiement "quoted" $literal &lt;script&gt;'* ]]
+[[ $(cat "$tmp/$path_label/report [preview].md") == *'Müller'* ]]
 count=$((count + 1))
+# Reusable, researched documentation mocks use the same platform entry point.
+while IFS= read -r mock_case; do
+  mock_id=$(jq -r '.id' <<< "$mock_case")
+  mock_input=$(jq -r '.input // (.id + ".json")' <<< "$mock_case")
+  cp "$repo/tests/mocks/$mock_input" "$tmp/input.json"
+  mock_config=$(jq -r '.config // empty' <<< "$mock_case")
+  if [[ -n "$mock_config" ]]; then
+    cp "$repo/tests/mocks/$mock_config" "$tmp/config.json"
+  else
+    cp "$repo/what-really-if.json" "$tmp/config.json"
+  fi
+  mock_expected=$(jq -c '.summary' <<< "$mock_case")
+  run "documentation mock: $mock_id" "$(jq -r '.exitCode' <<< "$mock_case")" \
+    ". as \$actual | $mock_expected | to_entries | all(.[]; \$actual[.key] == .value)"
+done < <(jq -c '.cases[]' "$repo/tests/mocks/manifest.json")
+
 printf 'Passed %s regression fixtures.\n' "$count"

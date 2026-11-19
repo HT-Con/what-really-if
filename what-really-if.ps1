@@ -9,7 +9,7 @@ to Azure. Supports flat Azure CLI results and REST properties.changes results.
 
 Exit codes: 0 = report generated (may include changes to review),
 2 = invalid input/configuration or renderer failure,
-3 = report generated with unknown effects or analysis gaps requiring review.
+3 = report generated with unacknowledged unknown effects or analysis gaps requiring review.
 Publish the report and raw JSON even when the exit code is 3.
 .EXAMPLE
 ./what-really-if.ps1 -InputFile whatif.json -OutputFile whatif.md -SummaryFile summary.json
@@ -40,9 +40,12 @@ Usage: ./what-really-if.ps1 -InputFile whatif.json -OutputFile whatif.md [option
 
 Requires PowerShell 7.2+ and jq 1.6+. Keep what-really-if.jq beside this script.
 Uses the same filtering engine and JSON configuration as what-really-if.sh.
+Project configs may use "extends": "default". Rules support beforeIn and
+allowStructural; acknowledgeUnsupported records reviewed analysis gaps.
+See README.md for matching behavior and examples.
 
 Exit codes:
-  0  Report generated, no unknown effects or reported analysis gaps.
+  0  Report generated, no unacknowledged unknown effects or analysis gaps.
      May include changes requiring approval. This is not permission to deploy.
   2  Invalid input/configuration, unsuccessful operation, or renderer failure.
   3  Report generated, unknown effects or analysis gaps require review.
@@ -121,23 +124,25 @@ try {
 
     $inputPath = Get-CanonicalFilePath $InputFile
     $configPath = Get-CanonicalFilePath $ConfigFile
+    $defaultsPath = Get-CanonicalFilePath (Join-Path $PSScriptRoot 'what-really-if.json')
+    $enginePath = Get-CanonicalFilePath (Join-Path $PSScriptRoot 'what-really-if.jq')
     $outputPath = Get-CanonicalFilePath $OutputFile
     $summaryPath = if ($SummaryFile) { Get-CanonicalFilePath $SummaryFile } else { $null }
     if (-not [System.IO.File]::Exists($inputPath)) { throw "Input does not exist: $InputFile" }
     if (-not [System.IO.File]::Exists($configPath)) { throw "Configuration does not exist: $ConfigFile" }
 
     $comparison = if ($IsWindows) { [System.StringComparer]::OrdinalIgnoreCase } else { [System.StringComparer]::Ordinal }
-    foreach ($source in @($inputPath, $configPath)) {
-        if ($comparison.Equals($source, $outputPath)) { throw 'Output must differ from input and config' }
-        if ($summaryPath -and $comparison.Equals($source, $summaryPath)) { throw 'Summary must differ from input and config' }
+    foreach ($source in @($inputPath, $configPath, $defaultsPath, $enginePath)) {
+        if ($comparison.Equals($source, $outputPath)) { throw 'Output must differ from input, config, and bundled engine/defaults' }
+        if ($summaryPath -and $comparison.Equals($source, $summaryPath)) { throw 'Summary must differ from input, config, and bundled engine/defaults' }
     }
     if ($summaryPath -and $comparison.Equals($summaryPath, $outputPath)) {
         throw 'Summary must differ from Markdown output'
     }
 
     $jqArguments = @(
-        '-s', '--slurpfile', 'config', $configPath, '--arg', 'title', $Title,
-        '-f', (Join-Path $PSScriptRoot 'what-really-if.jq'), '--', $inputPath
+        '-s', '--slurpfile', 'config', $configPath, '--slurpfile', 'defaults', $defaultsPath, '--arg', 'title', $Title,
+        '-f', $enginePath, '--', $inputPath
     )
     $resultText = Invoke-WhatIfJq $jqCommand.Source $jqArguments
     $result = ConvertFrom-Json -InputObject $resultText -AsHashtable -Depth 100

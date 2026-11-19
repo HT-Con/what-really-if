@@ -1,0 +1,12 @@
+{
+  "extends": "default",
+  "acknowledgeUnsupported": [
+    {
+      "id": "reviewed-role-assignment",
+      "enabled": true,
+      "resourceIdRegex": "^\\[resourceId\\('Microsoft\\.Authorization/roleAssignments',\\ guid\\(reference\\('/subscriptions/00000000\\-0000\\-0000\\-0000\\-000000000001/resourceGroups/rg\\-preview/providers/Microsoft\\.ManagedIdentity/userAssignedIdentities/id\\-app\\-prod',\\ '2024\\-11\\-30'\\)\\.principalId,\\ 'Reader'\\)\\)\\]$",
+      "unsupportedReasonRegex": "^The\\ resource\\ ID\\ could\\ not\\ be\\ evaluated\\ because\\ it\\ depends\\ on\\ a\\ reference\\(\\)\\ result\\.$",
+      "reason": "Synthetic example: assignment reviewed separately in the deployment approval."
+    }
+  ]
+}

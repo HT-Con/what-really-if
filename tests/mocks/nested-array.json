@@ -1,0 +1,69 @@
+{
+  "status": "Succeeded",
+  "changes": [
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.Network/virtualNetworks/vnet-hub-prod",
+      "changeType": "Modify",
+      "before": {
+        "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.Network/virtualNetworks/vnet-hub-prod",
+        "name": "vnet-hub-prod",
+        "type": "Microsoft.Network/virtualNetworks",
+        "apiVersion": "2025-01-01",
+        "location": "westeurope",
+        "tags": {
+          "Environment": "production"
+        },
+        "properties": {
+          "addressSpace": {
+            "addressPrefixes": [
+              "10.20.0.0/16"
+            ]
+          },
+          "subnets": [],
+          "enableDdosProtection": false,
+          "enableVmProtection": false
+        }
+      },
+      "after": {
+        "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.Network/virtualNetworks/vnet-hub-prod",
+        "name": "vnet-hub-prod",
+        "type": "Microsoft.Network/virtualNetworks",
+        "apiVersion": "2025-01-01",
+        "location": "westeurope",
+        "tags": {
+          "Environment": "production"
+        },
+        "properties": {
+          "addressSpace": {
+            "addressPrefixes": [
+              "10.20.0.0/15"
+            ]
+          },
+          "subnets": [],
+          "enableDdosProtection": false,
+          "enableVmProtection": false
+        }
+      },
+      "delta": [
+        {
+          "path": "properties.addressSpace.addressPrefixes",
+          "propertyChangeType": "Array",
+          "before": [
+            "10.20.0.0/16"
+          ],
+          "after": [
+            "10.20.0.0/15"
+          ],
+          "children": [
+            {
+              "path": "0",
+              "propertyChangeType": "Modify",
+              "before": "10.20.0.0/16",
+              "after": "10.20.0.0/15"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

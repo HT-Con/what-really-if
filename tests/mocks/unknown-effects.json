@@ -1,0 +1,57 @@
+{
+  "status": "Succeeded",
+  "changes": [
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.Storage/storageAccounts/stpreviewprod001",
+      "changeType": "Modify",
+      "before": {
+        "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.Storage/storageAccounts/stpreviewprod001",
+        "name": "stpreviewprod001",
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "2025-01-01",
+        "location": "westeurope",
+        "sku": {
+          "name": "Standard_LRS"
+        },
+        "kind": "StorageV2",
+        "tags": {
+          "lastDeployedOn": "20260115T090000Z"
+        },
+        "properties": {
+          "accessTier": "Hot",
+          "allowBlobPublicAccess": true,
+          "minimumTlsVersion": "TLS1_2",
+          "supportsHttpsTrafficOnly": true
+        }
+      },
+      "after": {
+        "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.Storage/storageAccounts/stpreviewprod001",
+        "name": "stpreviewprod001",
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "2025-01-01",
+        "location": "westeurope",
+        "sku": {
+          "name": "Standard_LRS"
+        },
+        "kind": "StorageV2",
+        "tags": {
+          "lastDeployedOn": "[utcNow()]"
+        },
+        "properties": {
+          "accessTier": "Hot",
+          "allowBlobPublicAccess": true,
+          "minimumTlsVersion": "TLS1_2",
+          "supportsHttpsTrafficOnly": true
+        }
+      },
+      "delta": [
+        {
+          "path": "tags.lastDeployedOn",
+          "propertyChangeType": "Modify",
+          "before": "20260115T090000Z",
+          "after": "[utcNow()]"
+        }
+      ]
+    }
+  ]
+}

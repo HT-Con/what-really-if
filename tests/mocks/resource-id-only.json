@@ -1,0 +1,9 @@
+{
+  "status": "Succeeded",
+  "changes": [
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.Storage/storageAccounts/stpreviewprod001",
+      "changeType": "Deploy"
+    }
+  ]
+}

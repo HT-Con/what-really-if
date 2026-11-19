@@ -1,0 +1,77 @@
+{
+  "status": "Succeeded",
+  "changes": [
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-app-prod",
+      "changeType": "Create",
+      "after": {
+        "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-app-prod",
+        "name": "id-app-prod",
+        "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+        "apiVersion": "2024-11-30",
+        "location": "westeurope",
+        "tags": {
+          "Environment": "production"
+        }
+      }
+    },
+    {
+      "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.Storage/storageAccounts/stpreviewprod001",
+      "changeType": "Modify",
+      "before": {
+        "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.Storage/storageAccounts/stpreviewprod001",
+        "name": "stpreviewprod001",
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "2025-01-01",
+        "location": "westeurope",
+        "sku": {
+          "name": "Standard_LRS"
+        },
+        "kind": "StorageV2",
+        "tags": {
+          "Owner": "Platform"
+        },
+        "properties": {
+          "accessTier": "Hot",
+          "allowBlobPublicAccess": true,
+          "minimumTlsVersion": "TLS1_2",
+          "supportsHttpsTrafficOnly": true
+        }
+      },
+      "after": {
+        "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.Storage/storageAccounts/stpreviewprod001",
+        "name": "stpreviewprod001",
+        "type": "Microsoft.Storage/storageAccounts",
+        "apiVersion": "2025-01-01",
+        "location": "westeurope",
+        "sku": {
+          "name": "Standard_LRS"
+        },
+        "kind": "StorageV2",
+        "tags": {
+          "Owner": "Cloud Engineering"
+        },
+        "properties": {
+          "accessTier": "Hot",
+          "allowBlobPublicAccess": false,
+          "minimumTlsVersion": "TLS1_2",
+          "supportsHttpsTrafficOnly": true
+        }
+      },
+      "delta": [
+        {
+          "path": "properties.allowBlobPublicAccess",
+          "propertyChangeType": "Modify",
+          "before": true,
+          "after": false
+        },
+        {
+          "path": "tags.Owner",
+          "propertyChangeType": "Modify",
+          "before": "Platform",
+          "after": "Cloud Engineering"
+        }
+      ]
+    }
+  ]
+}

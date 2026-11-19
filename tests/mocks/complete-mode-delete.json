@@ -1,0 +1,21 @@
+{
+  "status": "Succeeded",
+  "properties": {
+    "changes": [
+      {
+        "resourceId": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-retired-prod",
+        "changeType": "Delete",
+        "before": {
+          "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-preview/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-retired-prod",
+          "name": "id-retired-prod",
+          "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+          "apiVersion": "2024-11-30",
+          "location": "westeurope",
+          "tags": {
+            "Environment": "production"
+          }
+        }
+      }
+    ]
+  }
+}

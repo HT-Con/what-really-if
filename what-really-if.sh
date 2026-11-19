@@ -24,20 +24,23 @@ Capture Azure CLI output separately, checking its exit status:
   ./what-really-if.sh --input whatif.json --output whatif.md
 
 Exit codes:
-  0  Report generated; no unknown effects or reported analysis gaps.
+  0  Report generated; no unacknowledged unknown effects or analysis gaps.
      This includes reports WITH changes to review. It is not approval to deploy.
   2  Invalid input/configuration, unsuccessful operation, or renderer failure.
   3  Report generated, but unknown effects or analysis gaps require review.
 
 Defaults suppress explicit property-level NoEffect changes and verified scalar
-metadata deletions for listed resource types and API versions. Other changes
+metadata deletions for listed resource types. Common metadata paths match any
+API version; other defaults remain version constrained. Other changes
 remain visible. No property name, deletion, casing difference, or expression is
 globally ignored. Ignore resources are conservatively treated as analysis gaps.
 NoChange resources are counted, but omitted from the detailed resource list.
 
 Project rules require an exact resourceType, anchored pathRegex, changeTypes,
-and a reason. Optional apiVersions, beforeEquals, and afterEquals further narrow
-matches. Rules cannot hide resource creates/deletes or object/array changes.
+and a reason. Optional apiVersions, beforeEquals, beforeIn, and afterEquals narrow
+matches. allowStructural permits matching object/array differences. Resource
+creates/deletes remain visible. Use "extends": "default" to inherit bundled rules.
+acknowledgeUnsupported can mark reviewed Unsupported entries; see README.md.
 Paths use dot notation and numeric brackets, e.g. properties.listeners[0].name.
 The default config includes enabled, researched metadata rules; see README.md.
 
@@ -71,9 +74,46 @@ if [[ -n "$summary" ]]; then
   [[ ! "$summary" -ef "$input" && ! "$summary" -ef "$config" && ! "$summary" -ef "$output" ]] || die 'Summary must not alias other paths'
 fi
 
+# Resolve existing symlinks and normalize even not-yet-created output paths,
+# matching PowerShell's treatment of relative paths and destination aliases.
+canonical_path() {
+  local path=$1 depth=${2:-0} parent leaf target
+  ((depth < 100)) || return 1
+  [[ "$path" == /* ]] || path="$PWD/$path"
+  if [[ "$path" == / ]]; then printf '/\n'; return; fi
+  path=${path%/}
+  parent=$(canonical_path "$(dirname -- "$path")" "$((depth + 1))") || return 1
+  leaf=$(basename -- "$path")
+  case "$leaf" in
+    .) path=$parent ;;
+    ..) path=$(dirname -- "$parent") ;;
+    *) path="${parent%/}/$leaf" ;;
+  esac
+  if [[ -L "$path" ]]; then
+    target=$(readlink -- "$path") || return 1
+    [[ "$target" == /* ]] || target="$(dirname -- "$path")/$target"
+    canonical_path "$target" "$((depth + 1))"
+  else printf '%s\n' "$path"; fi
+}
+input=$(canonical_path "$input") || die 'Cannot resolve input path'
+config=$(canonical_path "$config") || die 'Cannot resolve config path'
+output=$(canonical_path "$output") || die 'Cannot resolve output path'
+defaults=$(canonical_path "$script_dir/what-really-if.json") || die 'Cannot resolve defaults path'
+engine=$(canonical_path "$script_dir/what-really-if.jq") || die 'Cannot resolve engine path'
+if [[ -n "$summary" ]]; then
+  summary=$(canonical_path "$summary") || die 'Cannot resolve summary path'
+  [[ "$summary" != "$output" ]] || die 'Summary must differ from Markdown output'
+fi
+for source_path in "$input" "$config" "$defaults" "$engine"; do
+  [[ "$source_path" != "$output" && ! "$source_path" -ef "$output" ]] || die 'Output must differ from input, config, and bundled engine/defaults'
+  if [[ -n "$summary" ]]; then
+    [[ "$source_path" != "$summary" && ! "$source_path" -ef "$summary" ]] || die 'Summary must differ from input, config, and bundled engine/defaults'
+  fi
+done
+
 work_dir=$(mktemp -d) || die 'Cannot create temporary directory'
 trap 'rm -rf -- "$work_dir"' EXIT
-if ! jq -s --slurpfile config "$config" --arg title "$title" \
+if ! jq -s --slurpfile config "$config" --slurpfile defaults "$defaults" --arg title "$title" \
     -f "$script_dir/what-really-if.jq" -- "$input" > "$work_dir/result.json"; then
   die 'Report not generated; inspect the error above'
 fi

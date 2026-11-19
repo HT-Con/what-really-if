@@ -1,0 +1,27 @@
+/* Local Markdown presentation for README screenshots; no remote assets. */
+* { box-sizing: border-box; }
+html { background: #f3f5f7; }
+body { margin: 0; padding: 32px; color: #1f2328; font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", sans-serif; }
+main { max-width: 1160px; margin: 0 auto; background: #fff; border: 1px solid #d8dee4; border-radius: 12px; overflow: hidden; }
+.context { padding: 15px 30px; background: #f6f8fa; border-bottom: 1px solid #d8dee4; display: flex; justify-content: space-between; gap: 24px; font-size: 12px; color: #57606a; }
+.context strong { color: #24292f; font-weight: 600; }
+article { padding: 26px 30px 22px; }
+h1 { font-size: 26px; line-height: 1.3; margin: 0 0 20px; padding-bottom: 16px; border-bottom: 1px solid #d8dee4; letter-spacing: -.5px; }
+h2 { font-size: 21px; line-height: 1.35; margin: 24px 0 18px; }
+h4 { font-size: 17px; margin: 22px 0 8px; }
+p { margin: 12px 0; }
+hr { border: 0; border-top: 1px solid #d8dee4; margin: 22px 0; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0 20px; font-size: 13px; line-height: 1.5; }
+th, td { padding: 10px 12px; border: 1px solid #d8dee4; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+th { font-weight: 600; background: #f6f8fa; }
+tr:nth-child(even) { background: #f6f8fa; }
+article > table:first-of-type { table-layout: fixed; }
+article > table:first-of-type th, article > table:first-of-type td { text-align: center; }
+details { margin: 14px 0; color: #57606a; }
+summary { cursor: pointer; color: #24292f; font-weight: 600; font-size: 13px; }
+details p { font-size: 12px; overflow-wrap: anywhere; }
+details table { table-layout: fixed; font-size: 11px; }
+details th, details td { padding: 9px; }
+details th:first-child { width: 23%; }
+details th:last-child { width: 24%; }
+article > p:last-child { font-size: 12px; color: #57606a; margin-top: 20px; }
