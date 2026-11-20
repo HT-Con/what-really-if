@@ -2,6 +2,7 @@
   "$comment": "Defaults suppress NoEffect and scalar Delete deltas at verified metadata paths. etag, provisioningState and resourceGuid rules match all API versions; other metadata remains version constrained. See README.md and tests/fixtures/safe-default-paths.json.",
   "version": 1,
   "suppressNoEffect": true,
+  "compactReport": false,
   "maxValueLength": 500,
   "rules": [
     {

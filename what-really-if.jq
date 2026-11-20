@@ -1,34 +1,50 @@
 # jq 1.6 compatible. Classify first; render from the classified records.
+# Shared engine for what-really-if.sh and what-really-if.ps1.
+# Compact reports retain full resource IDs and classification explanations.
 def require($condition; $message):
   if $condition then . else error($message) end;
+
 def nonempty_string: type == "string" and length > 0;
+
 def scalar: type != "object" and type != "array";
+
 def validate_config:
   require(type == "object"; "Config must be an object")
-  | require((keys - ["$comment", "version", "suppressNoEffect", "maxValueLength", "rules", "acknowledgeUnsupported"] | length) == 0; "Unknown config field")
+  | require((keys - ["$comment", "version", "suppressNoEffect", "maxValueLength", "rules", "acknowledgeUnsupported", "compactReport"] | length) == 0;
+      "Unknown config field")
+  | if has("compactReport") then . else .compactReport = false end
+  | require((.compactReport | type) == "boolean"; "compactReport must be boolean")
   | if has("acknowledgeUnsupported") then . else .acknowledgeUnsupported = [] end
   | require((.acknowledgeUnsupported | type) == "array"; "acknowledgeUnsupported must be an array")
   | .acknowledgeUnsupported |= map(
       require(type == "object"; "Each acknowledgeUnsupported entry must be an object")
-      | require((keys - ["id", "enabled", "resourceIdRegex", "unsupportedReasonRegex", "reason"] | length) == 0; "Unknown acknowledgeUnsupported field")
-      | require((.id | nonempty_string) and (.reason | nonempty_string); "acknowledgeUnsupported entries need id and reason")
+      | require((keys - ["id", "enabled", "resourceIdRegex", "unsupportedReasonRegex", "reason"] | length) == 0;
+          "Unknown acknowledgeUnsupported field")
+      | require((.id | nonempty_string) and (.reason | nonempty_string);
+          "acknowledgeUnsupported entries need id and reason")
       | require((.enabled | type) == "boolean"; "acknowledgeUnsupported entries need boolean enabled")
       | require((.resourceIdRegex | nonempty_string); "acknowledgeUnsupported entries need resourceIdRegex")
       | .resourceIdRegex as $regex | ("" | test($regex)) as $compiled
-      | require((has("unsupportedReasonRegex") | not) or (.unsupportedReasonRegex | nonempty_string); "unsupportedReasonRegex must be a nonempty string")
+      | require((has("unsupportedReasonRegex") | not) or (.unsupportedReasonRegex | nonempty_string);
+          "unsupportedReasonRegex must be a nonempty string")
       | if has("unsupportedReasonRegex") then .unsupportedReasonRegex as $regex | ("" | test($regex)) as $compiled | . else . end
     )
-  | require(([.acknowledgeUnsupported[].id] | length) == ([.acknowledgeUnsupported[].id] | unique | length); "acknowledgeUnsupported ids must be unique")
+  | require(([.acknowledgeUnsupported[].id] | length) == ([.acknowledgeUnsupported[].id] | unique | length);
+      "acknowledgeUnsupported ids must be unique")
   | require(.version == 1; "Config version must be 1")
   | require((.suppressNoEffect | type) == "boolean"; "suppressNoEffect must be boolean")
   | require((.maxValueLength | type) == "number"; "maxValueLength must be numeric")
-  | require(.maxValueLength >= 40 and .maxValueLength <= 10000 and (.maxValueLength | floor) == .maxValueLength; "maxValueLength must be an integer from 40 to 10000")
+  | require(.maxValueLength >= 40 and .maxValueLength <= 10000 and (.maxValueLength | floor) == .maxValueLength;
+      "maxValueLength must be an integer from 40 to 10000")
   | require((.rules | type) == "array"; "rules must be an array")
   | .rules |= map(
       require(type == "object"; "Each rule must be an object")
-      | require((keys - ["id", "enabled", "resourceType", "pathRegex", "changeTypes", "reason", "apiVersions", "beforeEquals", "afterEquals", "beforeIn", "allowStructural"] | length) == 0; "Unknown rule field")
-      | require((has("allowStructural") | not) or ((.allowStructural | type) == "boolean"); "allowStructural must be boolean")
-      | require((has("beforeIn") | not) or ((.beforeIn | type) == "array" and (.beforeIn | length) > 0); "beforeIn must be a nonempty array")
+      | require((keys - ["id", "enabled", "resourceType", "pathRegex", "changeTypes", "reason", "apiVersions", "beforeEquals", "afterEquals", "beforeIn", "allowStructural"] | length) == 0;
+          "Unknown rule field")
+      | require((has("allowStructural") | not) or ((.allowStructural | type) == "boolean");
+          "allowStructural must be boolean")
+      | require((has("beforeIn") | not) or ((.beforeIn | type) == "array" and (.beforeIn | length) > 0);
+          "beforeIn must be a nonempty array")
       | require(((has("beforeIn") and has("beforeEquals")) | not); "Use beforeIn or beforeEquals, not both")
       | require((.id | nonempty_string) and (.reason | nonempty_string); "Rules need id and reason")
       | require((.enabled | type) == "boolean"; "Rules need boolean enabled")
@@ -38,8 +54,10 @@ def validate_config:
       | require((.pathRegex | startswith("^") and endswith("$")); "pathRegex must be anchored with ^ and $")
       | .pathRegex as $regex | ("" | test($regex)) as $compiled
       | require((.changeTypes | type) == "array"; "changeTypes must be an array")
-      | require((.changeTypes | length) > 0 and all(.changeTypes[]; . == "Create" or . == "Modify" or . == "Delete"); "Invalid changeTypes")
-      | require((has("apiVersions") | not) or ((.apiVersions | type) == "array" and (.apiVersions | length) > 0 and all(.apiVersions[]; nonempty_string)); "apiVersions must be a nonempty string array")
+      | require((.changeTypes | length) > 0 and all(.changeTypes[]; . == "Create" or . == "Modify" or . == "Delete");
+          "Invalid changeTypes")
+      | require((has("apiVersions") | not) or ((.apiVersions | type) == "array" and (.apiVersions | length) > 0 and all(.apiVersions[]; nonempty_string));
+          "apiVersions must be a nonempty string array")
     )
   | require(([.rules[].id] | length) == ([.rules[].id] | unique | length); "Rule ids must be unique");
 
@@ -76,8 +94,10 @@ def arm_arguments:
       elif $token == "," and (.stack | length) == 0 then .args += [.current] | .current = ""
       else .current += $token end)
   | if .valid and (.stack | length) == 0 then .args + [.current] | map(gsub("^\\s+|\\s+$"; "")) else [] end;
+
 def arm_literal:
   if test("^'(?:[^']|'')*'$"; "s") then .[1:-1] | gsub("''"; "'") else null end;
+
 def expression_info:
   ([capture("^\\[\\s*resourceId\\s*\\((?<body>.*)\\)\\s*\\]$"; "is")][0].body // "")
   | arm_arguments as $args
@@ -136,6 +156,7 @@ def flatten($prefix):
     else $d + {path: $path} end;
 
 def expression_present: any(.. | strings; test("^\\[.*\\]$"; "s"));
+
 def noise_rule($cfg; $info):
   . as $p | first($cfg.rules[]
     | select(.enabled)
@@ -201,18 +222,23 @@ def escape: tostring | gsub("&"; "&amp;") | gsub("<"; "&lt;") | gsub(">"; "&gt;"
   | gsub("\r\n|\r|\n"; " ") | gsub("\\|"; "&#124;")
   | gsub("`"; "&#96;") | gsub("\\*"; "&#42;") | gsub("_"; "&#95;")
   | gsub("\\["; "&#91;") | gsub("\\]"; "&#93;") | gsub("\\\\"; "&#92;");
+
 def cell($max):
   tojson | if length > $max then .[0:$max] + " … [truncated; see raw JSON]" else . end | escape;
+
 def value_cell($key; $max): if has($key) then .[$key] | cell($max) else "—" end;
 
 # Strings without JSON quotes; everything else as compact JSON.
 def vcell($max):
   (if type == "string" then . else tojson end)
   | if length > $max then .[0:$max] + " … [truncated; see raw JSON]" else . end | escape;
+
 def vcell_of($key; $max): if has($key) then .[$key] | vcell($max) else "—" end;
 
 def change_icon: {"Create": "➕", "Delete": "➖", "Modify": "✏️", "Deploy": "🔁", "Unsupported": "❔", "Ignore": "⏭️", "NoChange": "·"}[.] // "•";
+
 def short_type: split("/") | if length > 1 then .[1:] | join("/") else join("/") end;
+
 def res_meta: (.resourceType | short_type | escape)
   + (if .resourceGroup then " · RG " + (.resourceGroup | escape) else "" end)
   + (if .apiVersion then " · API " + (.apiVersion | escape) else "" end);
@@ -237,13 +263,30 @@ def render_resource($cfg):
      | ([$payload | payload_rows($cfg.maxValueLength)]) as $rows
      | if ($rows | length) > 0 then "| Property | " + (if .changeType == "Create" then "Value" else "Current value" end) + " |", "|---|---|", $rows[], "" else empty end
    else empty end),
-  (if any(.properties[]; .classification != "noise") then
-     "| Change | Property | Before | After | Reason |", "|---|---|---|---|---|",
-     (.properties[] | select(.classification != "noise") |
-       "| " + (.propertyChangeType | change_icon) + (if .classification == "unknown" then " ❔" else "" end)
-       + " | " + (.path | escape)
-       + " | " + vcell_of("before"; $cfg.maxValueLength) + " | " + vcell_of("after"; $cfg.maxValueLength) + " | " + (.reason | escape) + " |"),
-     "" else empty end);
+  (if $cfg.compactReport then
+    (if any(.properties[]; .classification != "noise") then
+       "| | Property | Before | After |", "|---|---|---|---|",
+       (.properties[] | select(.classification != "noise") |
+         "| " + (.propertyChangeType | change_icon) + (if .classification == "unknown" then " ❔" else "" end)
+         + " | " + (.path | escape)
+         + " | " + vcell_of("before"; $cfg.maxValueLength) + " | " + vcell_of("after"; $cfg.maxValueLength) + " |"),
+       "",
+       (if any(.properties[]; .classification == "unknown" or (.classification != "noise" and .propertyChangeType == "NoEffect")) then
+          "<details>", "<summary>Property explanations</summary>", "",
+          (.properties[] | select(.classification == "unknown" or (.classification != "noise" and .propertyChangeType == "NoEffect"))
+            | "- " + (.path | escape) + ": " + (.reason | escape)),
+          "", "</details>", ""
+        else empty end)
+     else empty end)
+   else
+    (if any(.properties[]; .classification != "noise") then
+       "| Change | Property | Before | After | Reason |", "|---|---|---|---|---|",
+       (.properties[] | select(.classification != "noise") |
+         "| " + (.propertyChangeType | change_icon) + (if .classification == "unknown" then " ❔" else "" end)
+         + " | " + (.path | escape)
+         + " | " + vcell_of("before"; $cfg.maxValueLength) + " | " + vcell_of("after"; $cfg.maxValueLength) + " | " + (.reason | escape) + " |"),
+       "" else empty end)
+   end);
 
 def render($cfg; $title; $summary; $resources; $diagnostics):
   [$resources[] | select(.classification == "review")] as $review
@@ -273,20 +316,50 @@ def render($cfg; $title; $summary; $resources; $diagnostics):
         ($summary.analysisIssues[] | "- " + (. | escape)),
         ($diagnostics[] | "- " + (tojson | escape)), "" else empty end),
      "---", "",
-     (if ($acknowledged | length) > 0 then
-        "<details>", "<summary>☑️ Acknowledged, not evaluated by what-if (" + ($acknowledged | length | tostring) + ")</summary>", "",
-        "| Resource ID | Type | Resource group | Original issue | Rule | Acknowledged because |", "|---|---|---|---|---|---|",
-        ($acknowledged[] | "| " + (.resourceId | escape) + " | " + (.resourceType | short_type | escape) + " | "
-          + ((.resourceGroup // "—") | escape) + " | " + (.issues | join("; ") | escape) + " | " + (.acknowledged.id | escape) + " | " + (.acknowledged.reason | escape) + " |"),
-        "", "</details>", "" else empty end),
-     (if $summary.suppressedProperties > 0 then
-        "<details>", "<summary>🔇 Suppressed noise (" + ($summary.suppressedProperties | tostring) + " properties on "
-          + ($noisy | length | tostring) + " resources)</summary>", "",
-        "| Resource ID | Property | Change | Before | After | Rule | Reason |", "|---|---|---|---|---|---|---|",
-        ($noisy[] | .resourceId as $name | .properties[] | select(.classification == "noise") |
-          "| " + ($name | escape) + " | " + (.path | escape) + " | " + (.propertyChangeType | escape)
-          + " | " + vcell_of("before"; $cfg.maxValueLength) + " | " + vcell_of("after"; $cfg.maxValueLength)
-          + " | " + (.ruleId | escape) + " | " + (.reason | escape) + " |"), "", "</details>", "" else empty end),
+     (if $cfg.compactReport then
+       (if ($acknowledged | length) > 0 then
+          "<details>", "<summary>☑️ Acknowledged, not evaluated by what-if (" + ($acknowledged | length | tostring) + ")</summary>", "",
+          "| Resource | Type | Resource group | Acknowledged because |", "|---|---|---|---|",
+          ($acknowledged[] | "| " + (.name | escape) + " | " + (.resourceType | short_type | escape) + " | "
+            + ((.resourceGroup // "—") | escape) + " | " + (.acknowledged.reason | escape) + " |"),
+          "",
+          ($acknowledged[] | "<details>", "<summary>" + (.name | escape) + " · acknowledgement details</summary>", "",
+            (.resourceId | escape), "",
+            "- Rule: " + (.acknowledged.id | escape),
+            (.issues[] | "- " + (. | escape)), "", "</details>", ""),
+          "</details>", "" else empty end)
+      else
+       (if ($acknowledged | length) > 0 then
+          "<details>", "<summary>☑️ Acknowledged, not evaluated by what-if (" + ($acknowledged | length | tostring) + ")</summary>", "",
+          "| Resource ID | Type | Resource group | Original issue | Rule | Acknowledged because |", "|---|---|---|---|---|---|",
+          ($acknowledged[] | "| " + (.resourceId | escape) + " | " + (.resourceType | short_type | escape) + " | "
+            + ((.resourceGroup // "—") | escape) + " | " + (.issues | join("; ") | escape) + " | " + (.acknowledged.id | escape) + " | " + (.acknowledged.reason | escape) + " |"),
+          "", "</details>", "" else empty end)
+      end),
+     (if $cfg.compactReport then
+       (if $summary.suppressedProperties > 0 then
+          "<details>", "<summary>🔇 Suppressed noise (" + ($summary.suppressedProperties | tostring) + " properties on "
+            + ($noisy | length | tostring) + " resources)</summary>", "",
+          "| Resource | Resource group | Property | Change | Before | After | Rule |", "|---|---|---|---|---|---|---|",
+          ($noisy[] | .name as $name | (.resourceGroup // "—") as $rg | .properties[] | select(.classification == "noise") |
+            "| " + ($name | escape) + " | " + ($rg | escape) + " | " + (.path | escape) + " | " + (.propertyChangeType | escape)
+            + " | " + vcell_of("before"; 120) + " | " + vcell_of("after"; 120)
+            + " | " + (.ruleId | escape) + " |"), "",
+          "<details>", "<summary>Suppression details</summary>", "",
+          ($noisy[] | (.resourceId | escape), "",
+            (.properties[] | select(.classification == "noise")
+              | "- " + (.path | escape) + " · " + (.ruleId | escape) + ": " + (.reason | escape)), ""),
+          "</details>", "", "</details>", "" else empty end)
+      else
+       (if $summary.suppressedProperties > 0 then
+          "<details>", "<summary>🔇 Suppressed noise (" + ($summary.suppressedProperties | tostring) + " properties on "
+            + ($noisy | length | tostring) + " resources)</summary>", "",
+          "| Resource ID | Property | Change | Before | After | Rule | Reason |", "|---|---|---|---|---|---|---|",
+          ($noisy[] | .resourceId as $name | .properties[] | select(.classification == "noise") |
+            "| " + ($name | escape) + " | " + (.path | escape) + " | " + (.propertyChangeType | escape)
+            + " | " + vcell_of("before"; $cfg.maxValueLength) + " | " + vcell_of("after"; $cfg.maxValueLength)
+            + " | " + (.ruleId | escape) + " | " + (.reason | escape) + " |"), "", "</details>", "" else empty end)
+      end),
      "_Filtered what-if prediction, not a guarantee of deployment effects. Keep the original JSON alongside this report._"
     ] | join("\n");
 
@@ -299,9 +372,11 @@ require(length == 1; "Input must contain exactly one JSON document") | .[0]
 | require($raw.error == null and $root.error == null; "What-if returned an error")
 | ($raw.status // $root.status // null) as $status
 | require($status == null or $status == "Succeeded"; "What-if operation did not succeed")
-| require(($root | type) == "object" and ($root.changes | type) == "array"; "Input needs a changes array (flat or under properties)")
+| require(($root | type) == "object" and ($root.changes | type) == "array";
+    "Input needs a changes array (flat or under properties)")
 | require($root.diagnostics == null or ($root.diagnostics | type) == "array"; "diagnostics must be an array")
-| require($root.potentialChanges == null or ($root.potentialChanges | type) == "array"; "potentialChanges must be an array")
+| require($root.potentialChanges == null or ($root.potentialChanges | type) == "array";
+    "potentialChanges must be an array")
 | ($root.diagnostics // []) as $diagnostics
 | [$root.changes[]
     | require(type == "object"; "Resource change must be an object")

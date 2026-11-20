@@ -265,11 +265,15 @@ for expression in \
 done
 
 # Acknowledgements only cover the specified known failure. New gaps still fail.
-jq '.acknowledgeUnsupported = [{id:"known",enabled:true,resourceIdRegex:"^/known$",unsupportedReasonRegex:"^Known limitation$",reason:"Reviewed upstream limitation"}]' "$tmp/empty-config.json" > "$tmp/config.json"
+jq '.compactReport = true | .acknowledgeUnsupported = [{id:"known",enabled:true,resourceIdRegex:"^/known$",unsupportedReasonRegex:"^Known limitation$",reason:"Reviewed upstream limitation"}]' "$tmp/empty-config.json" > "$tmp/config.json"
 fixture '.changes = [{resourceId:"/known",changeType:"Unsupported",unsupportedReason:"Known limitation"}]'
 run 'known unsupported acknowledged' 0 '.acknowledgedResources == 1 and .unknownResources == 0 and (.hasUnknown | not)'
 [[ $(cat "$tmp/report.md") == *'Known limitation'* ]]
 [[ $(cat "$tmp/report.md") == *'Reviewed upstream limitation'* ]]
+[[ $(cat "$tmp/report.md") == *'| Resource | Type | Resource group | Acknowledged because |'* ]]
+[[ $(cat "$tmp/report.md") == *'| known | Unknown | — | Reviewed upstream limitation |'* ]]
+[[ $(cat "$tmp/report.md") == *'known · acknowledgement details'* ]]
+[[ $(cat "$tmp/report.md") == *'/known'* ]]
 [[ $(cat "$tmp/report.md") != *'Everything reported by what-if was classified as noise'* ]]
 fixture '.changes = [{resourceId:"/known",changeType:"Unsupported",unsupportedReason:"Known limitation"}] | .diagnostics = [{level:"Warning",message:"Independent analysis gap"}]'
 run 'acknowledgement preserves independent diagnostics' 3 '.acknowledgedResources == 1 and .hasUnknown'
@@ -321,6 +325,68 @@ fixture '.changes[0].changeType = "Create" | .changes[0].after = {name:"gw",type
 run 'create payload is property rows' 0 '.reviewResources == 1'
 [[ $(cat "$tmp/report.md") == *'| properties.flag | false |'* ]]
 [[ $(cat "$tmp/report.md") != *'Full raw output is in the pipeline artifact'* ]]
+
+# Compact tables keep audit context available in disclosures.
+jq '.compactReport = true' "$tmp/empty-config.json" > "$tmp/config.json"
+fixture '.changes[0].delta = [{path:"tags.Owner",propertyChangeType:"Modify",before:"Alice",after:"Bob"},{path:"properties.flag",propertyChangeType:"Modify",before:false}]'
+run 'compact property table retains unknown explanation' 3 '.reviewProperties == 1 and .unknownProperties == 1'
+[[ $(cat "$tmp/report.md") == *'| | Property | Before | After |'* ]]
+[[ $(cat "$tmp/report.md") == *'<summary>Property explanations</summary>'* ]]
+[[ $(cat "$tmp/report.md") == *'Missing expected before/after value'* ]]
+
+fixture '.changes[0].delta = [{path:"tags.Owner",propertyChangeType:"Modify",before:"Alice",after:"Bob"},{path:"properties.flag",propertyChangeType:"NoEffect",before:false,after:false}]'
+run 'suppressed NoEffect does not create empty property explanation' 0 '.reviewProperties == 1 and .suppressedProperties == 1'
+[[ $(cat "$tmp/report.md") != *'<summary>Property explanations</summary>'* ]]
+
+fixture '.changes[0].delta = [{path:"properties.note",propertyChangeType:"NoEffect",before:("x" * 150),after:("x" * 150)}]'
+run 'compact noise table truncates values and retains full identity' 0 '.suppressedProperties == 1'
+[[ $(cat "$tmp/report.md") == *'| gw | rg | properties.note | NoEffect |'* ]]
+[[ $(cat "$tmp/report.md") == *'&#91;truncated; see raw JSON&#93;'* ]]
+[[ $(cat "$tmp/report.md") != *$(printf 'x%.0s' {1..121})* ]]
+[[ $(cat "$tmp/report.md") == *'<summary>Suppression details</summary>'* ]]
+[[ $(cat "$tmp/report.md") == *'/subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/applicationGateways/gw'* ]]
+[[ $(cat "$tmp/report.md") == *'Azure reports NoEffect'* ]]
+
+# Resource groups distinguish identical short names in the noise table.
+fixture '.changes[0].delta[0].propertyChangeType = "NoEffect" | .changes += [.changes[0] | .resourceId |= sub("/resourceGroups/rg/"; "/resourceGroups/rg-other/")]'
+run 'noise table distinguishes names across resource groups' 0 '.noiseOnlyResources == 2 and .suppressedProperties == 2'
+[[ $(cat "$tmp/report.md") == *'| Resource | Resource group | Property | Change | Before | After | Rule |'* ]]
+[[ $(cat "$tmp/report.md") == *'| gw | rg | properties.provisioningState | NoEffect |'* ]]
+[[ $(cat "$tmp/report.md") == *'| gw | rg-other | properties.provisioningState | NoEffect |'* ]]
+
+fixture '.changes[0].resourceId = "/providers/Microsoft.Network/applicationGateways/gw" | .changes[0].delta[0].propertyChangeType = "NoEffect"'
+run 'noise table handles resources without a resource group' 0 '.noiseOnlyResources == 1'
+[[ $(cat "$tmp/report.md") == *'| gw | — | properties.provisioningState | NoEffect |'* ]]
+
+fixture '.changes[0].resourceId |= sub("/resourceGroups/rg/"; "/resourceGroups/rg<test>|/") | .changes[0].delta[0].propertyChangeType = "NoEffect"'
+run 'noise table escapes resource group text' 0 '.noiseOnlyResources == 1'
+[[ $(cat "$tmp/report.md") == *'| rg&lt;test&gt;&#124; |'* ]]
+
+# Compact layout is opt-in; omitted and explicit false use full IDs and reasons.
+fixture '.changes[0].delta[0].propertyChangeType = "NoEffect"'
+for layout_config in 'del(.compactReport)' '.compactReport = false'; do
+  jq "$layout_config" "$tmp/empty-config.json" > "$tmp/config.json"
+  run "full report layout: $layout_config" 0 '.noiseOnlyResources == 1'
+  [[ $(cat "$tmp/report.md") == *'| Resource ID | Property | Change | Before | After | Rule | Reason |'* ]]
+  [[ $(cat "$tmp/report.md") == *'| /subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/applicationGateways/gw |'* ]]
+done
+fixture '.'
+run 'default property table includes reasons' 0 '.reviewProperties == 1'
+[[ $(cat "$tmp/report.md") == *'| Change | Property | Before | After | Reason |'* ]]
+fixture '.changes = [{resourceId:"/known",changeType:"Unsupported",unsupportedReason:"Known limitation"}]'
+jq '.acknowledgeUnsupported = [{id:"known",enabled:true,resourceIdRegex:"^/known$",reason:"Reviewed separately"}]' "$tmp/empty-config.json" > "$tmp/config.json"
+run 'default acknowledged table includes full identity and reason' 0 '.acknowledgedResources == 1'
+[[ $(cat "$tmp/report.md") == *'| Resource ID | Type | Resource group | Original issue | Rule | Acknowledged because |'* ]]
+[[ $(cat "$tmp/report.md") == *'| /known | Unknown | — | Known limitation;'* ]]
+for invalid_layout in null '"true"' 1 '[]' '{}'; do
+  jq --argjson layout "$invalid_layout" '.compactReport = $layout' "$tmp/empty-config.json" > "$tmp/config.json"
+  run "invalid compactReport: $invalid_layout" 2 ''
+done
+printf '%s\n' '{"extends":"default","compactReport":true}' > "$tmp/config.json"
+fixture '.'
+run 'inherited defaults allow compact layout opt-in' 0 '.suppressedProperties == 1'
+[[ $(cat "$tmp/report.md") == *'| Resource | Resource group | Property | Change | Before | After | Rule |'* ]]
+cp "$tmp/empty-config.json" "$tmp/config.json"
 
 # Different spellings of future output paths must not publish over each other.
 fixture '.'

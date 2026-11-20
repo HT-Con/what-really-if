@@ -203,8 +203,22 @@ entries appear in a collapsible section with the full ID, original issue,
 matching rule ID, and review reason; the summary includes `acknowledgedResources`.
 They are acknowledged analysis gaps, not evaluated deployment effects.
 
-Reports use short resource names and property tables for Create/Delete. Full
-resource IDs remain available in collapsible details. Expression IDs are parsed
+Reports use property tables for Create/Delete. `compactReport` is an optional
+boolean and defaults to `false`: acknowledgement and noise tables show full
+resource IDs, and property tables include reasons. Values use `maxValueLength`.
+To enable the compact layout in a project config:
+
+```json
+{
+  "extends": "default",
+  "compactReport": true
+}
+```
+
+Compact acknowledgement and noise tables show short names alongside resource
+groups. Noise values are capped at 120 characters; full IDs and explanations
+remain available in collapsible details. This setting changes presentation only.
+Expression IDs are parsed
 only for literal type arguments of the outer `resourceId(...)` call; uncertain
 forms use the payload type or `Unknown` rather than guessing from nested calls.
 
